@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>20*20迷宫</title>
+</head>
+<body>
+    <div class="container" style="margin: 0 auto; width: 2000px">
+        <canvas id="canvas" width="2000" height="2000"></canvas>
+    </div>
+    <script type="text/javascript">
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        class Prim{
+            constructor(input){
+                this.line = input;
+                this.result = [];
+            }
+            generate(){
+                this.width = 2 * this.line + 1;
+                for(let i = 0; i < this.width; i++){
+                    const temp = [];
+                    for(let j = 0; j < this.width; j++){
+                        if(i % 2 === 0 || j % 2 === 0) temp.push({value: 0, x: j, y: i});
+                        else temp.push({value: 1, x: j, y: i, isVisited: false,});
+                    }
+                    this.result[i] = temp;
+                }
+                let current = this.result[2 * Math.floor(Math.random() * this.line) + 1][2 * Math.floor(Math.random() * this.line) + 1];
+                current.isVisited = true;
+                let visitedList = [];
+                visitedList.push(current);
+                while(current.isVisited){
+                    let up    = this.result[current.y - 2] ? this.result[current.y - 2][current.x] : {isVisited: true};
+                    let right = this.result[current.x + 2] ? this.result[current.y][current.x + 2] : {isVisited: true};
+                    let down  = this.result[current.y + 2] ? this.result[current.y + 2][current.x] : {isVisited: true};
+                    let left  = this.result[current.x - 2] ? this.result[current.y][current.x - 2] : {isVisited: true};
+                    let neighbor = [];
+                    if(!up.isVisited)    neighbor.push(up);
+                    if(!right.isVisited) neighbor.push(right);
+                    if(!down.isVisited)  neighbor.push(down);
+                    if(!left.isVisited)  neighbor.push(left);
+                    if(neighbor.length !== 0){
+                        let neighborNode = neighbor[Math.floor(Math.random() * neighbor.length)];
+                        this.result[(neighborNode.y + current.y) / 2][(neighborNode.x + current.x) / 2].value = 1;
+                        neighborNode.isVisited = true;
+                        visitedList.push(neighborNode);
+                        current = neighborNode;
+                    }
+                    else{
+                        current = visitedList[Math.floor(Math.random() * visitedList.length)];
+                        if(!current) break;
+                        current.isVisited = true;
+                        let tempArr = [];
+                        visitedList.forEach(item => {if(item !== current) tempArr.push(item);});
+                        visitedList = tempArr;
+                    }
+                }
+            }
+        }
+        let output = new Prim(20);
+        output.generate();
+        const final = [];
+        const transform = output.result;
+        for(let i = 0; i < transform.length; i++){
+            const finalTmp = [];
+            for(let j = 0; j < transform.length; j++){
+                finalTmp.push(transform[i][j].value);
+            }
+            final.push(finalTmp);
+        }
+        const input = final;
+        const short = 2;
+        const long = 80;
+        for(let i = 0; i < input.length; i++){
+            for(let j = 0; j < input[0].length; j++){
+                if(input[i][j] === 0) helper(true, i, j);
+                if(input[i][j] === 1) helper(false, i, j);
+            }
+        }
+        function helper(flag, x, y){
+            if(flag) ctx.fillStyle="#0000ff";
+            else ctx.fillStyle="#ffffff";
+            let width  = x % 2 === 0 ? short: long;
+            let height = y % 2 === 0 ? short: long;
+            let x_place = short * x + (long - short) * parseInt(x / 2);
+            let y_place = short * y + (long - short) * parseInt(y / 2);
+            ctx.fillRect(x_place, y_place, width, height);
+        }
+        ctx.stroke();
+        let a = false;
+        let actual_length = parseInt(input.length / 2);
+        let run_in = parseInt(Math.random() * actual_length * 4);
+        let run_out;
+        while(!a){
+            run_out = parseInt(Math.random() * actual_length * 4);
+            if(run_in !== run_out &&
+                Math.abs(run_in - run_out) !== 1 &&
+                !(run_in  === 0 && run_out === actual_length * 4 - 1) &&
+                !(run_out === 0 && run_in  === actual_length * 4 - 1)
+
+            ) a = true;
+        }
+        clean(run_in,  actual_length);
+        clean(run_out, actual_length);
+        function clean(index, len){
+            let direction = parseInt(index / len);
+            let excursion = index % len;
+            console.log(direction, excursion);
+            if(direction === 0) ctx.clearRect(short * (excursion + 1) + long * excursion, 0, long, short);
+            if(direction === 1) ctx.clearRect((short + long) * len, short * (excursion + 1) + long * excursion, short, long);
+            if(direction === 2) ctx.clearRect(short * (excursion + 1) + long * excursion, (short + long) * len, long, short);
+            if(direction === 3) ctx.clearRect(0, short * (excursion + 1) + long * excursion, short, long);
+        }
+    </script>
+</body>
+</html>
+
